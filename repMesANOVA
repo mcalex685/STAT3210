@@ -1,0 +1,44 @@
+library(dplyr)
+library(tibble)
+library(kableExtra)
+library(knitr)
+library(ggplot2)
+library(tidyr)
+library(rstatix)
+
+anova_results <- data_long_19 %>%
+  anova_test(
+    dv = sqrt_PVT, #outcome : PVT
+    wid = ID, #individual indentifier 
+    within = Day, #within subjects fator 
+    between = Tx,  #between subjects factor 
+    type = 3       # Type III SS for repeated measures
+  )
+print(anova_results)
+
+#pairwise comparison for days 
+pairwise_days <- data_long_19 %>%
+    pairwise_t_test(
+      sqrt_PVT ~ Day,
+      paired = TRUE,
+      p.adjust.method = "bonferroni"
+    )
+print(pairwise_days)
+
+#pairwise comparison for tx
+# between treatment groups across days 
+pairwise_tx <- data_long_19 %>%
+  pairwise_t_test(
+    sqrt_PVT ~ Tx, 
+    paired = FALSE,  # Between-subjects factor, so no pairing
+    p.adjust.method = "bonferroni"
+  )
+
+# pairwise comparisons between treatment groups within days - NOT VALID 
+pairwise_tx <- data_long_19 %>%
+  pairwise_t_test(
+    sqrt_PVT ~ Tx, 
+    paired = FALSE,  # btwn subjects factor no pairing
+    p.adjust.method = "bonferroni"
+  )
+print(pairwise_tx)
