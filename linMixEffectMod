@@ -1,0 +1,27 @@
+library(dplyr)
+library(tibble)
+library(kableExtra)
+library(knitr)
+library(ggplot2)
+library(tidyr)
+library(rstatix)
+library(lme4)
+
+#treat day as continuous b/c its sequential 
+model <- lmer(sqrt_PVT ~ Tx * Day + (1 | ID), data = data_long_19) #conditional on individual charecteristics 
+
+confint(model)
+#make a lil interaction plot 
+ggplot(data_long_19, aes(x = Day, y = sqrt_PVT, color = factor(Tx), linetype = factor(Tx), group = Tx)) +
+  stat_summary(fun = mean, geom = "line", size = 1) +
+  stat_summary(fun = mean, geom = "point", size = 3) +
+  labs(title = " ", x = "Day", y = "sqrt(PVT)", color = "Treatment", linetype = "Treatment") +
+  scale_color_manual(
+    values = c("gold", "darkred"),  #colour for groups 
+    labels = c("Caffeine", "Placebo")  #for legend 
+  ) +
+  scale_linetype_manual(
+    values = c("solid", "dashed"),  #line type 
+    labels = c("Caffeine", "Placebo")
+  ) +
+  theme_minimal()
