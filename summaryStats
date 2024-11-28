@@ -1,0 +1,24 @@
+library(dplyr)
+library(tibble)
+library(kableExtra)
+library(knitr)
+library(tidyr)
+
+summary <- data %>%
+  group_by(Tx) %>%
+  summarize(
+    Mean_Day0 = mean(Day0, na.rm = TRUE),
+    Mean_Day1 = mean(Day1, na.rm = TRUE),
+    Mean_Day2 = mean(Day2, na.rm = TRUE),
+    Mean_Day3 = mean(Day3, na.rm = TRUE)
+  )%>%
+  mutate(Tx = recode(Tx, `1` = "Caffeine", `2` = "Placebo"))
+
+# summarize result in a table 
+summary %>%
+  kable("html", col.names = c("Treatment", "Day 0", "Day 1", "Day 2", "Day 3")) %>%
+  kable_styling(
+    full_width = FALSE,
+    bootstrap_options = c("striped", "hover", "condensed")
+  ) %>%
+  add_header_above(c(" " = 1, "Mean PVT Lapses by Day" = 4))
