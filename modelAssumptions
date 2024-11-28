@@ -1,0 +1,115 @@
+library(dplyr)
+library(tibble)
+library(kableExtra)
+library(knitr)
+library(ggplot2)
+library(tidyr)
+
+box_data<- data %>%
+    mutate(Tx = recode(Tx, `1` = "Caffeine", `2` = "Placebo"))
+
+par(mfrow = c(2, 2), mar = c(4, 4, 2, 1), oma = c(0, 0, 0, 0), 
+    cex.main = 2.5,  # Title text size
+    cex.axis = 2)   
+
+boxplot(box_data$Day0 ~ box_data$Tx, main = "Day 0", xlab = "", ylab = "")
+boxplot(box_data$Day1 ~ box_data$Tx, main = "Day 1", xlab = "", ylab = "")
+boxplot(box_data$Day2 ~ box_data$Tx, main = "Day 2", xlab = "", ylab = "")
+boxplot(box_data$Day3 ~ box_data$Tx, main = "Day 3", xlab = "", ylab = "")
+
+# Pivot to long 
+data_long <- data %>%
+  pivot_longer(
+    cols = starts_with("Day"), #day to col 
+    names_to = "Day",          
+    values_to = "PVT"          #PVT to val
+  ) %>%
+  mutate(Day = as.integer(sub("Day", "", Day))) #make day indicators 
+#conver to df 
+data_long<-as.data.frame(data_long)
+
+#part 1: check assumptions 
+#check for normality w/in days 
+normality_results <- data_long %>%
+  group_by(Day) %>%
+  summarise(
+    test_statistic = shapiro.test(PVT)$statistic,
+    p_value = shapiro.test(PVT)$p.value          
+  )
+print(normality_results)
+
+# Visualize with Q-Q plots
+ggplot(data_long, aes(sample = PVT)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~ Day) +
+  theme_minimal() +
+  labs(title = "Q-Q Plots for Each Day")
+#normality violated try a transfromation 
+#qqplot of original 
+qqnorm(data_long$PVT)
+qqline(data_long$PVT)
+#sqrt 
+normality_results_sqrt <- data_long %>%
+  group_by(Day) %>%
+    summarise(
+    test_statistic = shapiro.test(sqrt(PVT))$statistic,
+    p_value = shapiro.test(sqrt(PVT))$p.value          
+  )
+print(normality_results_sqrt)
+ggplot(data_long, aes(sample = sqrt(PVT))) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~ Day) +
+  theme_minimal() +
+  labs(title = "Q-Q Plots for Each Day")
+
+#remove obs 19 and see if normal 
+data_19<-data[-19,]
+#pivot longer for analysis 
+data_long_19 <- data_19 %>%
+  pivot_longer(
+    cols = starts_with("Day"), 
+    names_to = "Day",          
+    values_to = "PVT"       
+  ) %>%
+  mutate(
+    Day = as.integer(sub("Day", "", Day)), 
+    sqrt_PVT = sqrt(PVT)                  #Add sqrt transformation 
+  )
+
+#check for normality w/in days 
+normality_results <- data_long_19 %>%
+  group_by(Day) %>%
+  summarise(p_value = shapiro.test(PVT)$p.value)
+
+print(normality_results)
+
+# Visualize with Q-Q plots
+ggplot(data_long_19, aes(sample = PVT)) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~ Day) +
+  theme_minimal() +
+  labs(title = "Q-Q Plots for Each Day")
+#normality violated try a transfromation 
+
+#sqrt transformation  
+normality_results_sqrt_19 <- data_long_19 %>%
+  group_by(Day) %>%
+  summarise(p_value = shapiro.test(sqrt(PVT))$p.value)
+print(normality_results_sqrt_19)
+
+ggplot(data_long_19, aes(sample = sqrt(PVT))) +
+  stat_qq() +
+  stat_qq_line() +
+  facet_wrap(~ Day) +
+  theme_minimal() +
+  labs(title = "Q-Q Plots for Each Day")
+
+anova_results <- data_long_19 %>%
+  anova_test(dv = sqrt_PVT, wid = ID, within = Day)
+
+# View the ANOVA table with corrections
+anova_results
+#check this but I think we're good to go 
