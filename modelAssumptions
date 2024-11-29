@@ -24,7 +24,7 @@ data_long <- data %>%
     names_to = "Day",          
     values_to = "PVT"          #PVT to val
   ) %>%
-  mutate(Day = as.integer(sub("Day", "", Day))) #make day indicators 
+  mutate(Day = as.factor(sub("Day", "", Day))) #make day indicators 
 #conver to df 
 data_long<-as.data.frame(data_long)
 
@@ -74,7 +74,7 @@ data_long_19 <- data_19 %>%
     values_to = "PVT"       
   ) %>%
   mutate(
-    Day = as.integer(sub("Day", "", Day)), 
+    Day = as.factor(sub("Day", "", Day)), 
     sqrt_PVT = sqrt(PVT)                  #Add sqrt transformation 
   )
 
